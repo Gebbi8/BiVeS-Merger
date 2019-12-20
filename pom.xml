@@ -1,0 +1,45 @@
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+  <modelVersion>4.0.0</modelVersion>
+  <groupId>de.uni-rostock.sbi</groupId>
+  <artifactId>BiVeS-Merge</artifactId>
+  <version>0.0.1-SNAPSHOT</version>
+  <name>BiVeS-Merge</name>
+  <description>
+  	BiVeS - BioModel Version Control System
+  	This package provides access to the BiVeS framework
+  </description>
+  <url>http://sems.uni-rostock.de/projects/bives/</url>
+  <organization>
+  	<name>SEMS project @ University of Rostock</name>
+  	<url>http://sems.uni-rostock.de</url>
+  	</organization>
+  <licenses>
+  	<license>
+    	<name>The Apache License, Version 2.0</name>
+    	<url>http://www.apache.org/licenses/LICENSE-2.0.txt</url>
+    </license>
+  </licenses>
+  <dependencies>
+        <dependency>
+            <groupId>junit</groupId>
+            <artifactId>junit</artifactId>
+            <version>4.8.1</version>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>de.uni-rostock.sbi</groupId>
+            <artifactId>BiVeS-Core</artifactId>
+            <version>1.9.2</version>
+        </dependency>
+        <dependency>
+        	<groupId>de.uni-rostock.sbi</groupId>
+    		<artifactId>BiVeS</artifactId>
+	    	<version>1.11.3</version>
+        </dependency>
+        <dependency>
+            <groupId>de.uni-rostock.sbi</groupId>
+            <artifactId>BiVeS-SBML</artifactId>
+            <version>1.9.1</version>
+        </dependency>
+    </dependencies>
+</project>
