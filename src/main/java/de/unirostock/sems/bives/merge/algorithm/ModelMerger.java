@@ -1,23 +1,21 @@
 package de.unirostock.sems.bives.merge.algorithm;
 
 import java.io.File;
-import java.io.FileInputStream;
 import java.io.IOException;
 import java.util.List;
 
-import javax.xml.parsers.DocumentBuilder;
-import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.parsers.ParserConfigurationException;
-import javax.xml.xpath.XPath;
-import javax.xml.xpath.XPathConstants;
-import javax.xml.xpath.XPathExpression;
-import javax.xml.xpath.XPathExpressionException;
-import javax.xml.xpath.XPathFactory;
 
+import org.jdom2.Content;
 import org.jdom2.Document;
 import org.jdom2.Element;
 import org.jdom2.JDOMException;
-
+import org.jdom2.filter.Filters;
+import org.jdom2.input.SAXBuilder;
+import org.jdom2.output.XMLOutputter;
+import org.jdom2.xpath.XPathExpression;
+import org.jdom2.xpath.XPathFactory;
+import org.xml.sax.SAXException;
 
 import de.unirostock.sems.bives.api.Diff;
 import de.unirostock.sems.bives.ds.graph.GraphTranslator;
@@ -39,6 +37,10 @@ public class ModelMerger {
 	
 	protected Document xmlDocB;
 	
+	protected File fileA;
+	
+	protected File fileB;
+			
 	public ModelMerger (Document docA, Document docB, Diff diffed) {
 		xmlDocA = docA;
 		xmlDocB = docB;
@@ -46,16 +48,14 @@ public class ModelMerger {
 		
 	}
 	
-	public ModelMerger(File docA, File docB) throws IOException, JDOMException, BivesConnectionException {
-		//parse XML from files
-		FileInputStream fileIS = new FileInputStream(xmlDocA);
-        DocumentBuilderFactory dbf = DocumentBuilderFactory.newInstance();
-		dbf.setNamespaceAware(false); // never forget this!
-        DocumentBuilder db = dbf.newDocumentBuilder();
-        xmlDocA = (Document) db.parse(docA);
-        
+	public ModelMerger(File docA, File docB) throws IOException, JDOMException, BivesConnectionException, ParserConfigurationException, SAXException {
+
 		xmlDocA = XmlTools.readDocument (docA);
 		xmlDocB = XmlTools.readDocument (docB);
+		
+		fileA = docA;
+		fileB = docB;
+		
 		
 		//getDocuments
 		SBMLValidator val = new SBMLValidator ();
@@ -71,10 +71,17 @@ public class ModelMerger {
 	}
 	
 	
-	public void getSlaveElements() throws XPathExpressionException, ParserConfigurationException {
+	public void getSlaveElements() throws ParserConfigurationException, SAXException, IOException, JDOMException {
 
+		SAXBuilder builder = new SAXBuilder();
+try{
+		Document doc = builder.build(fileA);
+		Document newDoc = builder.build(fileB);
+		//  URL url = new URL("https://raw.github.com/hunterhacker/jdom/master/build.xml");
+	     XPathFactory xpathFactory = XPathFactory.instance();
+	     	
 		Element delete = (Element) diff.getPatch().getDeletes();
-		System.out.println("test");
+		System.out.println("test!!!!!!!");
 
 		List <Element> deletes = delete.getChildren();
 
@@ -82,17 +89,36 @@ public class ModelMerger {
 			if(del.getAttribute("triggeredBy") == null) continue; 
 			String oldPath = del.getAttributeValue("oldPath");
 			
-			XPathFactory xpathFactory = XPathFactory.newInstance();
-			XPath xpath = xpathFactory.newXPath();
-			XPathExpression expr = xpath.compile(oldPath);
-			
-
-			
 			System.out.println(oldPath);
-			System.out.println(xmlDocA == null);
-			NodeList oldNode =  (NodeList) expr.evaluate(xmlDocA, XPathConstants.NODESET);
-			if(oldNode != null) System.out.println("success");
-		}	
+			
+			String localPath = "";
+			oldPath = oldPath.substring(1);
+			for(String s : oldPath.split("/")){
+				System.out.println(s);
+				String[] k = s.split("\\[");
+				localPath = localPath + "/*[local-name() = '" + k[0] +"'][" + k[1];
+				System.out.println(localPath);
+			}
+			
+			XPathExpression<Element> expr = xpathFactory.compile(localPath, Filters.element());
+			
+//			 XMLOutputter xout = new XMLOutputter();
+//			  xout.output(doc, System.out);
+		      
+			 List<Element> elements = expr.evaluate(doc);
+		     for( Element el : elements){
+		    	 System.out.println(el.toString());
+		     };
+
+
+		      if(true) System.out.println("success");		      
+
+		}
+		
+
+      } catch (IOException e) {
+        e.printStackTrace();
+      }
 	}
 	
 }

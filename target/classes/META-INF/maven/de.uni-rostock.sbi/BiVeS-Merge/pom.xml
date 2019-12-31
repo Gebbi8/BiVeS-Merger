@@ -41,5 +41,12 @@
             <artifactId>BiVeS-SBML</artifactId>
             <version>1.9.1</version>
         </dependency>
+        <!-- https://mvnrepository.com/artifact/jaxen/jaxen -->
+		<dependency>
+		    <groupId>jaxen</groupId>
+		    <artifactId>jaxen</artifactId>
+		    <version>1.2.0</version>
+		</dependency>
+        
     </dependencies>
 </project>
