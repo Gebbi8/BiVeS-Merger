@@ -86,30 +86,33 @@ try{
 		List <Element> deletes = delete.getChildren();
 
 		for(Element del : deletes) {
-			if(del.getAttribute("triggeredBy") == null) continue; 
+			//skip changes that are included with the parents
+			if(del.getAttribute("triggeredBy") == null) continue;
+			
+			//get path add local-name function
 			String oldPath = del.getAttributeValue("oldPath");
+			String localPath = getLocalPath(oldPath);
 			
-			System.out.println(oldPath);
+			//get path to parent
+			String localParent = parentFromOldPath(localPath);
 			
-			String localPath = "";
-			oldPath = oldPath.substring(1);
-			for(String s : oldPath.split("/")){
-				System.out.println(s);
-				String[] k = s.split("\\[");
-				localPath = localPath + "/*[local-name() = '" + k[0] +"'][" + k[1];
-				System.out.println(localPath);
-			}
-			
-			XPathExpression<Element> expr = xpathFactory.compile(localPath, Filters.element());
-			
-//			 XMLOutputter xout = new XMLOutputter();
-//			  xout.output(doc, System.out);
-		      
-			 List<Element> elements = expr.evaluate(doc);
-		     for( Element el : elements){
-		    	 System.out.println(el.toString());
-		     };
+			//get old node
+			XPathExpression<Element> exprAddTo = xpathFactory.compile(localParent, Filters.element());
+			Element addTo = exprAddTo.evaluateFirst(newDoc);
 
+				System.out.println(addTo.toString() + "    <--- check this out");
+		
+			//get node to append to
+			
+			 XMLOutputter xout = new XMLOutputter();
+//			  xout.output(doc, System.out);
+			XPathExpression<Element> expr = xpathFactory.compile(localPath, Filters.element()); 
+			Element element = expr.evaluateFirst(doc);
+			xout.output(newDoc, System.out);
+		    addTo.addContent(element.clone());
+		    System.out.println(newDoc.toString());
+
+			xout.output(newDoc, System.out);
 
 		      if(true) System.out.println("success");		      
 
@@ -120,5 +123,25 @@ try{
         e.printStackTrace();
       }
 	}
+	
+	public String getLocalPath(String path){
+		String locPath = "";
+		path = path.substring(1);
+		for(String s : path.split("/")){
+			String[] k = s.split("\\[");
+			locPath = locPath + "/*[local-name() = '" + k[0] +"'][" + k[1];
+		}
+		
+		return locPath;
+	}
+	
+	public String parentFromOldPath(String path){
+		String parentPath;
+		int lastOcc = path.lastIndexOf('/');
+		parentPath = path.substring(0, lastOcc);
+		System.out.println(parentPath + "!pareent!!");
+		return parentPath;
+	}
+	
 	
 }
