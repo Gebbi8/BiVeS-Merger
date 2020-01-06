@@ -49,6 +49,9 @@ public class TestMerge
 	/** The Constant SimpleV2. */
 	public static final String SimpleV2 = "test/simpleModelV2.sbml";
 	
+	/* Constants for local CellML model versions */
+	public static final String CellMLExampleV1 = "test/bhalla_model_1999-version1-from-budhat";
+	public static final String CellMLExampleV2 = "test/bhalla_model_1999-version2-from-budhat";
 	/**
 	 * Test functions of merge class.
 	 * @throws BivesConnectionException
@@ -59,7 +62,7 @@ public class TestMerge
 	 * @throws BivesSBMLParseException 
 	 */
 	@Test
-	public void testMergefunctions() throws  BivesConnectionException, BivesSBMLParseException, BivesDocumentConsistencyException, XmlDocumentParseException, IOException, JDOMException {
+	public void testSBML() throws  IOException, JDOMException, BivesConnectionException {
 		
 		
 		try
@@ -67,29 +70,31 @@ public class TestMerge
 			//get Files
 			File a = new File (SimpleV1);
 			File b = new File (SimpleV2);
-			
-			//parse XML from files
-			Document A = XmlTools.readDocument (a);
-			Document B = XmlTools.readDocument (b);
-			
-			//getDocuments
-			SBMLValidator val = new SBMLValidator ();
-			val.validate(new File (SimpleV1));
-			SBMLDocument d1 = val.getDocument();
-			val.validate(new File (SimpleV2));
-			SBMLDocument d2 = val.getDocument();
-			
-			SBMLDiff diff = new SBMLDiff (d1, d2);
-			diff.mapTrees(Diff.ALLOW_DIFFERENT_IDS, Diff.CARE_ABOUT_NAMES, Diff.STRICTER_NAMES);
-			System.out.println(diff.getDiff());
 
 			ModelMerger test = new ModelMerger (a, b);
 
-			test.getSlaveElements();
+			test.merge();
 
 		}
 		catch (Exception e) {
-			System.out.println("NUN: ----->" + e);
+			System.out.println("SBML Error: " + e);
+		}
+		
+	}
+	
+	@Test
+	public void testCellML() throws IOException, JDOMException, BivesConnectionException{
+		try{
+		File a = new File (CellMLExampleV1);
+		File b = new File (CellMLExampleV2);
+		
+		ModelMerger test = new ModelMerger (a,b);
+	    
+
+		test.merge();
+
+		} catch (Exception e) {
+			System.out.println("CellML Error: " + e);
 		}
 		
 	}
