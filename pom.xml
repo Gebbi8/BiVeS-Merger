@@ -4,6 +4,10 @@
   <artifactId>BiVeS-Merge</artifactId>
   <version>0.0.1-SNAPSHOT</version>
   <name>BiVeS-Merge</name>
+  <properties>
+    <maven.compiler.source>1.6</maven.compiler.source>
+    <maven.compiler.target>1.6</maven.compiler.target>
+  </properties>
   <description>
   	BiVeS - BioModel Version Control System
   	This package provides access to the BiVeS framework
@@ -32,21 +36,19 @@
             <version>1.9.2</version>
         </dependency>
         <dependency>
-        	<groupId>de.uni-rostock.sbi</groupId>
-    		<artifactId>BiVeS</artifactId>
-	    	<version>1.11.3</version>
-        </dependency>
-        <dependency>
             <groupId>de.uni-rostock.sbi</groupId>
             <artifactId>BiVeS-SBML</artifactId>
             <version>1.9.1</version>
         </dependency>
-        <!-- https://mvnrepository.com/artifact/jaxen/jaxen -->
+        <dependency>
+            <groupId>de.uni-rostock.sbi</groupId>
+            <artifactId>BiVeS-CellML</artifactId>
+            <version>1.8.0</version>
+        </dependency> 
 		<dependency>
 		    <groupId>jaxen</groupId>
 		    <artifactId>jaxen</artifactId>
 		    <version>1.2.0</version>
-		</dependency>
-        
+		</dependency>               
     </dependencies>
 </project>
