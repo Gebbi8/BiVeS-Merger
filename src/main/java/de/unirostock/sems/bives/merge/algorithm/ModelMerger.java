@@ -13,6 +13,7 @@ import org.jdom2.JDOMException;
 import org.jdom2.Text;
 import org.jdom2.filter.Filters;
 import org.jdom2.input.SAXBuilder;
+import org.jdom2.output.Format;
 import org.jdom2.output.XMLOutputter;
 import org.jdom2.xpath.XPathExpression;
 import org.jdom2.xpath.XPathFactory;
@@ -43,85 +44,56 @@ public class ModelMerger {
 	protected File fileA;
 	protected File fileB;
 	
-	public ModelMerger(File docA, File docB, boolean masterRight) throws IOException, JDOMException{
+	public ModelMerger(Document docA, Document docB, Diff diffed, boolean masterRight) throws IOException, JDOMException{
 		if(masterRight){
-			xmlDocB = XmlTools.readDocument (docA);
-			xmlDocA = XmlTools.readDocument (docB);
+			xmlDocB = docA;
+			xmlDocA = docB;
 			
-			fileB = docA;
-			fileA = docB;
+//			fileB = docA;
+//			fileA = docB;
 		} else {
-			xmlDocA = XmlTools.readDocument (docA);
-			xmlDocB = XmlTools.readDocument (docB);
+			xmlDocA = docA;
+			xmlDocB = docB;
 			
-			fileA = docA;
-			fileB = docB;
+//			fileA = docA;
+//			fileB = docB;
 		}
+		diff = diffed;
 	}
 	
-	public ModelMerger(File docA, File docB) throws IOException, JDOMException {
-		xmlDocA = XmlTools.readDocument (docA);
-		xmlDocB = XmlTools.readDocument (docB);
+	public ModelMerger(Document docA, Document docB, Diff diffed) throws IOException, JDOMException {
+		xmlDocA = docA;
+		xmlDocB = docB;
 		
-		fileA = docA;
-		fileB = docB;
+//		fileA = docA;
+//		fileB = docB;
+		diff = diffed;
 	}
 	
 	
-	public void merge() throws BivesConnectionException, JDOMException  {
-		//getDocuments
-		
-		SBMLValidator sbmlVal = new SBMLValidator();
-		CellMLValidator cellmlVal = new CellMLValidator();
-		if(sbmlVal.validate(fileA)){
-			SBMLDocument d1 = sbmlVal.getDocument();
-			if(sbmlVal.validate(fileB)){
-				SBMLDocument d2 = sbmlVal.getDocument();
-				SBMLDiff sbmlDiff = new SBMLDiff(d1, d2);
-				sbmlDiff.mapTrees(Diff.ALLOW_DIFFERENT_IDS, Diff.CARE_ABOUT_NAMES, Diff.STRICTER_NAMES);
-				diff = sbmlDiff;				
-			} else {
-				System.out.println("Second doc is no SBML, but the first one is.");
-				return;
-			}
+	public String getMerge() throws BivesConnectionException, JDOMException, IOException  {
 
-		} else if(cellmlVal.validate(fileA)) {
-			CellMLDocument d1 = cellmlVal.getDocument();
-			if(cellmlVal.validate(fileB)){
-				CellMLDocument d2 = cellmlVal.getDocument();
-				CellMLDiff cellmlDiff = new CellMLDiff(d1, d2);
-				cellmlDiff.mapTrees(Diff.ALLOW_DIFFERENT_IDS, Diff.CARE_ABOUT_NAMES, Diff.STRICTER_NAMES);
-				diff = cellmlDiff;
-			} else {
-				System.out.println("Second doc is no CellML but the first one is!");
-				return;
-			}
-		} else {
-			System.out.println("The first doc is neither SBML nor CellML");
-			return;
-		}
+		String mergedDoc = null;
 		
-		System.out.println(diff);
-		
-		SAXBuilder builder = new SAXBuilder();
+
 		try{
-			Document doc = builder.build(fileA);
-			Document newDoc = builder.build(fileB);
+			Document doc = xmlDocA;
+			Document newDoc = xmlDocB;
 		    XPathFactory xpathFactory = XPathFactory.instance();
 		     	
-			Element delete = (Element) diff.getPatch().getDeletes();	
-			List <Element> deletes = delete.getChildren();
-	
+			List <Element> deletes = diff.getPatch().getDeletes().getChildren();
+			if(deletes == null) {
+				System.out.println("no nodes that exist only in the first model");
+				return null;
+			}
+
 			for(Element del : deletes) {
-				
-
 				//skip changes that are included with the parents
-				if(del.getAttribute("triggeredBy") == null){
-					System.out.println("skip due to trigger");
-
+				if(del.getAttribute("triggeredBy") != null){
+					//System.out.println("skip due to trigger");
 					continue;
 				}
-				
+
 				//get path add local-name function
 				String oldPath = del.getAttributeValue("oldPath");
 				String localPath = getLocalPath(oldPath);
@@ -133,18 +105,16 @@ public class ModelMerger {
 				XPathExpression<Element> exprAddTo = xpathFactory.compile(localParent, Filters.element());
 				Element addTo = exprAddTo.evaluateFirst(newDoc);
 		
-				//get node to append to
-				//XMLOutputter xout = new XMLOutputter();
-				
-				
-				//xout.output(newDoc, System.out);
+				//get node to append to				
 				if(oldPath.contains("text()")){
 					System.out.println(localPath);
 					XPathExpression<Text> expr = xpathFactory.compile(localPath, Filters.text());
 					Text element = expr.evaluateFirst(doc);
+					System.out.println(localParent);
 					System.out.println("FOUND TEXT: " + element.getText());
 					
 					addTo.addContent(element.getText());
+					System.out.println("tetetet");
 				} else {
 					XPathExpression<Element> expr = xpathFactory.compile(localPath, Filters.element());
 					Element element = expr.evaluateFirst(doc);
@@ -154,15 +124,16 @@ public class ModelMerger {
 				}
 
 			}
-		} catch (IOException e) {
-		    System.out.println("test");	
-
-	        e.printStackTrace();
-		} catch (JDOMException e) {
-		    System.out.println("test");	
-
+			XMLOutputter xout = new XMLOutputter();
+			Format f = Format.getPrettyFormat(); 
+			xout.setFormat(f);
+			mergedDoc = xout.outputString(newDoc);
+			xout.output(newDoc, System.out);
+						
+		} catch (Error e) {
 	        e.printStackTrace();
 		}
+		return mergedDoc;
 	}
 	
 	public String getLocalPath(String path){
@@ -182,6 +153,4 @@ public class ModelMerger {
 		parentPath = path.substring(0, lastOcc);
 		return parentPath;
 	}
-	
-	
 }

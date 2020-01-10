@@ -12,21 +12,21 @@ import java.io.File;
 
 import org.jdom2.Document;
 import org.jdom2.JDOMException;
+import org.jdom2.input.SAXBuilder;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
 
 import de.unirostock.sems.bives.api.Diff;
+import de.unirostock.sems.bives.cellml.api.CellMLDiff;
 import de.unirostock.sems.bives.exception.BivesConnectionException;
 import de.unirostock.sems.bives.exception.BivesDocumentConsistencyException;
 import de.unirostock.sems.bives.merge.algorithm.ModelMerger;
 
-import de.unirostock.sems.bives.sbml.algorithm.SBMLValidator;
 import de.unirostock.sems.bives.sbml.api.SBMLDiff;
 import de.unirostock.sems.bives.sbml.exception.BivesSBMLParseException;
-import de.unirostock.sems.bives.sbml.parser.SBMLDocument;
+import de.unirostock.sems.xmlutils.ds.TreeDocument;
 import de.unirostock.sems.xmlutils.exception.XmlDocumentParseException;
-import de.unirostock.sems.xmlutils.tools.XmlTools;
 
 
 //import XPath packages
@@ -61,9 +61,9 @@ public class TestMerge
 	 * @throws BivesDocumentConsistencyException 
 	 * @throws BivesSBMLParseException 
 	 */
-	@Test
+	//@Test
 	public void testSBML() throws  IOException, JDOMException, BivesConnectionException {
-		
+		System.out.println("Testing SBML merge");
 		
 		try
 		{
@@ -71,9 +71,19 @@ public class TestMerge
 			File a = new File (SimpleV1);
 			File b = new File (SimpleV2);
 
-			ModelMerger test = new ModelMerger (a, b);
+			SAXBuilder builder = new SAXBuilder();
+			Document d1 = builder.build(a);
+			Document d2 = builder.build(b);
+			
+			TreeDocument td1 = new TreeDocument (d1, null);
+			TreeDocument td2 = new TreeDocument (d2, null);
+			Diff diff = new SBMLDiff(td1, td2);
+			
+			diff.mapTrees(true, false, false);
+			
+			ModelMerger test = new ModelMerger (d1, d2, diff);
 
-			test.merge();
+			test.getMerge();
 
 		}
 		catch (Exception e) {
@@ -82,20 +92,67 @@ public class TestMerge
 		
 	}
 	
-	@Test
+	//@Test
 	public void testCellML() throws IOException, JDOMException, BivesConnectionException{
+		System.out.println("Testing CellMl Merge");
 		try{
 		File a = new File (CellMLExampleV1);
 		File b = new File (CellMLExampleV2);
 		
-		ModelMerger test = new ModelMerger (a,b);
+		SAXBuilder builder = new SAXBuilder();
+		Document d1 = builder.build(a);
+		Document d2 = builder.build(b);
+		
+		TreeDocument td1 = new TreeDocument (d1, null);
+		TreeDocument td2 = new TreeDocument (d2, null);
+		Diff diff = new CellMLDiff(td1, td2);
+		diff.mapTrees(true, false, false);
+		
+		ModelMerger test = new ModelMerger (d1, d2, diff);
 	    
 
-		test.merge();
+		test.getMerge();
 
 		} catch (Exception e) {
 			System.out.println("CellML Error: " + e);
 		}
 		
+	}
+	
+	//@Test
+	public void testSpeciesAddition() {
+		System.out.println("adding species");
+	}
+	
+	@Test
+	public void testPedrosExample() {
+		System.out.println("Testing Models from Pedro Mendes ");
+		
+		try
+		{
+			//get Files
+			File a = new File ("test/curatedExamples/YeastGlycolysis.xml");
+			File b = new File ("test/curatedExamples/YeastPPP.xml");
+
+			SAXBuilder builder = new SAXBuilder();
+			Document d1 = builder.build(a);
+			Document d2 = builder.build(b);
+
+			TreeDocument td1 = new TreeDocument (d1, null);
+			TreeDocument td2 = new TreeDocument (d2, null);
+			Diff diff = new SBMLDiff(td1, td2);
+
+			diff.mapTrees(true, false, false);
+System.out.println(diff.getPatch().getNumDeletes());
+			ModelMerger test = new ModelMerger (d1, d2, diff);
+
+			test.getMerge();
+	
+
+
+		}
+		catch (Exception e) {
+			System.out.println("Error: " + e);
+		}
 	}
 }
