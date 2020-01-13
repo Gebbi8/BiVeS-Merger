@@ -61,7 +61,7 @@ public class TestMerge
 	 * @throws BivesDocumentConsistencyException 
 	 * @throws BivesSBMLParseException 
 	 */
-	//@Test
+	@Test
 	public void testSBML() throws  IOException, JDOMException, BivesConnectionException {
 		System.out.println("Testing SBML merge");
 		
@@ -92,7 +92,7 @@ public class TestMerge
 		
 	}
 	
-	//@Test
+	@Test
 	public void testCellML() throws IOException, JDOMException, BivesConnectionException{
 		System.out.println("Testing CellMl Merge");
 		try{
@@ -143,7 +143,6 @@ public class TestMerge
 			Diff diff = new SBMLDiff(td1, td2);
 
 			diff.mapTrees(true, false, false);
-System.out.println(diff.getPatch().getNumDeletes());
 			ModelMerger test = new ModelMerger (d1, d2, diff);
 
 			test.getMerge();

@@ -78,11 +78,6 @@ public class ModelMerger {
 		moveMap = new HashMap<String, String>();
 		List<Element> moves = diff.getPatch().getMoves().getChildren();
 		
-		XMLOutputter xout = new XMLOutputter();
-		Format f = Format.getPrettyFormat(); 
-		xout.setFormat(f);
-		xout.output(moves, System.out);
-
 		for(Element move : moves){
 			String oldPath = move.getAttributeValue("oldPath");
 			String newPath = move.getAttributeValue("newPath");
@@ -108,51 +103,33 @@ public class ModelMerger {
 			}
 
 			for(Element del : deletes) {
-				System.out.println("-------------------------");
 				//skip changes that are included with the parents
 				if(del.getAttribute("triggeredBy") != null){
-					System.out.println("skip due to trigger");
+					//System.out.println("skip due to trigger");
 					continue;
 				}
 
 				//get path add local-name function
 				String oldPath = del.getAttributeValue("oldPath");
-				
 				String localPath = getLocalPath(oldPath);
 				//System.out.println(oldPath);	
 				
-				//get path to parent
-				String parent = parentFrom(oldPath);
-				System.out.println("--> " + parent);
-				//check if an ancestor was moved
+				//get local path to parent and check if an ancestor was moved
 				String localParent = getLocalPath(parentFrom(movedAncestor(oldPath)));
-
-				System.out.println(localParent);
 				
 				//get Parent to add the new Element to
 				XPathExpression<Element> exprAddTo = xpathFactory.compile(localParent, Filters.element());
 				Element addTo = exprAddTo.evaluateFirst(newDoc);
-		
-
 				
 				//get node to append to				
 				if(oldPath.contains("text()")){
-					System.out.println("text");
-
 					XPathExpression<Text> expr = xpathFactory.compile(localPath, Filters.text());
 					Text element = expr.evaluateFirst(doc);
-
-					System.out.println("FOUND TEXT: " + element.getText());
-					System.out.println("adding to: " + localParent);
+					//System.out.println("FOUND TEXT: " + element.getText());
 					addTo.addContent(element.getText());
-					System.out.println("check");
 				} else {
-					System.out.println("no text");
-System.out.println(localPath);
 					XPathExpression<Element> expr = xpathFactory.compile(localPath, Filters.element());
-					System.out.println("TESTESTESTE");
 					Element element = expr.evaluateFirst(doc);
-				System.out.println("CHEEEECK " + element.toString());	
 				    addTo.addContent(element.clone());
 					//xout.output(newDoc, System.out);						
 				}
@@ -191,7 +168,6 @@ System.out.println(localPath);
 	}
 	
 	public String movedAncestor(String path){
-		System.out.println(path);
 		String end = path;
 		while(path.contains("/")){
 			int cutoff = path.lastIndexOf('/');
