@@ -2,7 +2,9 @@ package de.unirostock.sems.bives.merge.algorithm;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import javax.xml.parsers.ParserConfigurationException;
 
@@ -44,6 +46,8 @@ public class ModelMerger {
 	protected File fileA;
 	protected File fileB;
 	
+	protected Map<String, String> moveMap;
+	
 	public ModelMerger(Document docA, Document docB, Diff diffed, boolean masterRight) throws IOException, JDOMException{
 		if(masterRight){
 			xmlDocB = docA;
@@ -70,13 +74,29 @@ public class ModelMerger {
 		diff = diffed;
 	}
 	
+	public void mapMoves() throws IOException{
+		moveMap = new HashMap<String, String>();
+		List<Element> moves = diff.getPatch().getMoves().getChildren();
+		
+		XMLOutputter xout = new XMLOutputter();
+		Format f = Format.getPrettyFormat(); 
+		xout.setFormat(f);
+		xout.output(moves, System.out);
+
+		for(Element move : moves){
+			String oldPath = move.getAttributeValue("oldPath");
+			String newPath = move.getAttributeValue("newPath");
+			moveMap.put(oldPath, newPath);
+		}
+	}
+	
 	
 	public String getMerge() throws BivesConnectionException, JDOMException, IOException  {
 
 		String mergedDoc = null;
-		
-
+	
 		try{
+			mapMoves();
 			Document doc = xmlDocA;
 			Document newDoc = xmlDocB;
 		    XPathFactory xpathFactory = XPathFactory.instance();
@@ -88,47 +108,63 @@ public class ModelMerger {
 			}
 
 			for(Element del : deletes) {
+				System.out.println("-------------------------");
 				//skip changes that are included with the parents
 				if(del.getAttribute("triggeredBy") != null){
-					//System.out.println("skip due to trigger");
+					System.out.println("skip due to trigger");
 					continue;
 				}
 
 				//get path add local-name function
 				String oldPath = del.getAttributeValue("oldPath");
+				
 				String localPath = getLocalPath(oldPath);
 				//System.out.println(oldPath);	
+				
 				//get path to parent
-				String localParent = parentFromOldPath(localPath);
+				String parent = parentFrom(oldPath);
+				System.out.println("--> " + parent);
+				//check if an ancestor was moved
+				String localParent = getLocalPath(parentFrom(movedAncestor(oldPath)));
+
+				System.out.println(localParent);
 				
 				//get Parent to add the new Element to
 				XPathExpression<Element> exprAddTo = xpathFactory.compile(localParent, Filters.element());
 				Element addTo = exprAddTo.evaluateFirst(newDoc);
 		
+
+				
 				//get node to append to				
 				if(oldPath.contains("text()")){
-					System.out.println(localPath);
+					System.out.println("text");
+
 					XPathExpression<Text> expr = xpathFactory.compile(localPath, Filters.text());
 					Text element = expr.evaluateFirst(doc);
-					System.out.println(localParent);
+
 					System.out.println("FOUND TEXT: " + element.getText());
-					
+					System.out.println("adding to: " + localParent);
 					addTo.addContent(element.getText());
-					System.out.println("tetetet");
+					System.out.println("check");
 				} else {
+					System.out.println("no text");
+System.out.println(localPath);
 					XPathExpression<Element> expr = xpathFactory.compile(localPath, Filters.element());
+					System.out.println("TESTESTESTE");
 					Element element = expr.evaluateFirst(doc);
-					
+				System.out.println("CHEEEECK " + element.toString());	
 				    addTo.addContent(element.clone());
 					//xout.output(newDoc, System.out);						
 				}
 
 			}
+			
 			XMLOutputter xout = new XMLOutputter();
 			Format f = Format.getPrettyFormat(); 
 			xout.setFormat(f);
+
 			mergedDoc = xout.outputString(newDoc);
-			xout.output(newDoc, System.out);
+			//xout.output(newDoc, System.out);
 						
 		} catch (Error e) {
 	        e.printStackTrace();
@@ -147,10 +183,27 @@ public class ModelMerger {
 		return locPath;
 	}
 	
-	public String parentFromOldPath(String path){
+	public String parentFrom(String path){
 		String parentPath;
 		int lastOcc = path.lastIndexOf('/');
 		parentPath = path.substring(0, lastOcc);
 		return parentPath;
+	}
+	
+	public String movedAncestor(String path){
+		System.out.println(path);
+		String end = path;
+		while(path.contains("/")){
+			int cutoff = path.lastIndexOf('/');
+			path = path.substring(0, cutoff);
+			if(moveMap.containsKey(path)){
+				end = end.substring(cutoff);
+				String movedOldPath = moveMap.get(path) + end;
+				System.out.println("Moved Ancestor");
+				return movedOldPath;
+			}
+
+		}
+		return end;
 	}
 }
