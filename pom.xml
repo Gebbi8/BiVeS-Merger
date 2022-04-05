@@ -1,9 +1,9 @@
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
   <modelVersion>4.0.0</modelVersion>
   <groupId>de.uni-rostock.sbi</groupId>
-  <artifactId>BiVeS-Merge</artifactId>
-  <version>0.1.0</version>
-  <name>BiVeS-Merge</name>
+  <artifactId>BiVeS-Merger</artifactId>
+  <version>0.1.1</version>
+  <name>BiVeS-Merger</name>
   <properties>
     <maven.compiler.source>1.6</maven.compiler.source>
     <maven.compiler.target>1.6</maven.compiler.target>
@@ -33,17 +33,17 @@
         <dependency>
             <groupId>de.uni-rostock.sbi</groupId>
             <artifactId>BiVeS-Core</artifactId>
-            <version>1.9.2</version>
+            <version>1.9.8</version>
         </dependency>
         <dependency>
             <groupId>de.uni-rostock.sbi</groupId>
             <artifactId>BiVeS-SBML</artifactId>
-            <version>1.9.1</version>
+            <version>1.9.8</version>
         </dependency>
         <dependency>
             <groupId>de.uni-rostock.sbi</groupId>
             <artifactId>BiVeS-CellML</artifactId>
-            <version>1.8.0</version>
+            <version>1.8.5</version>
         </dependency> 
 		<dependency>
 		    <groupId>jaxen</groupId>
